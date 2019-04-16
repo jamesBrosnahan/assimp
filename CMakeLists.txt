@@ -1,6 +1,6 @@
 # Open Asset Import Library (assimp)
 # ----------------------------------------------------------------------
-# Copyright (c) 2006-2018, assimp team
+# Copyright (c) 2006-2019, assimp team
 
 # All rights reserved.
 #
@@ -67,7 +67,7 @@ OPTION( ASSIMP_NO_EXPORT
 )
 OPTION( ASSIMP_BUILD_ZLIB
   "Build your own zlib"
-  OFF
+  OFF  
 )
 OPTION( ASSIMP_BUILD_ASSIMP_TOOLS
   "If the supplementary tools for Assimp are built in addition to the library."
@@ -119,12 +119,14 @@ IF (IOS)
   IF (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE "Release")
   ENDIF (NOT CMAKE_BUILD_TYPE)
+  ADD_DEFINITIONS(-DENABLE_BITCODE)
 ENDIF (IOS)
 
 # Use subset of Windows.h
 if (WIN32)
   ADD_DEFINITIONS( -DWIN32_LEAN_AND_MEAN )
 endif()
+
 
 IF(MSVC)
   OPTION( ASSIMP_INSTALL_PDB
@@ -155,7 +157,7 @@ SET (PROJECT_VERSION "${ASSIMP_VERSION}")
 
 SET( ASSIMP_PACKAGE_VERSION "0" CACHE STRING "the package-specific version used for uploading the sources" )
 
-# Enable C++1 globally
+# Enable C++11 support globally
 set_property( GLOBAL PROPERTY CXX_STANDARD 11 )
 
 IF(NOT IGNORE_GIT_HASH)
@@ -170,7 +172,7 @@ IF(NOT IGNORE_GIT_HASH)
 
   # Get the latest abbreviated commit hash of the working branch
   EXECUTE_PROCESS(
-    COMMAND git log -1 --format=%h --no-show-signature
+    COMMAND git rev-parse --short=8 HEAD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -196,7 +198,7 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_BINARY_DIR}/include/assimp/config.h
 )
 
-INCLUDE_DIRECTORIES(
+INCLUDE_DIRECTORIES( BEFORE
   ./
   include
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -349,6 +351,15 @@ IF( NOT ZLIB_FOUND )
   INCLUDE(CheckIncludeFile)
   INCLUDE(CheckTypeSize)
   INCLUDE(CheckFunctionExists)
+
+  # Explicitly turn off ASM686 and AMD64 cmake options.
+  # The AMD64 option causes a build failure on MSVC and the ASM builds seem to have problems:
+  #		https://github.com/madler/zlib/issues/41#issuecomment-125848075
+  # Also prevents these options from "polluting" the cmake options if assimp is being
+  # included as a submodule.
+  set( ASM686 FALSE CACHE INTERNAL "Override ZLIB flag to turn off assembly" FORCE )
+  set( AMD64 FALSE CACHE INTERNAL "Override ZLIB flag to turn off assembly" FORCE )
+
   # compile from sources
   ADD_SUBDIRECTORY(contrib/zlib)
   SET(ZLIB_FOUND 1)
@@ -466,6 +477,7 @@ ENDIF ( ASSIMP_BUILD_ASSIMP_TOOLS )
 IF ( ASSIMP_BUILD_SAMPLES)
   IF ( WIN32 )
     ADD_SUBDIRECTORY( samples/SimpleTexturedOpenGL/ )
+    ADD_SUBDIRECTORY( samples/SimpleTexturedDirectx11 )
   ENDIF ( WIN32 )
   ADD_SUBDIRECTORY( samples/SimpleOpenGL/ )
 ENDIF ( ASSIMP_BUILD_SAMPLES )

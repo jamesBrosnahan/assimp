@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2018, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -142,7 +142,7 @@ namespace STEP {
     struct TypeError : DeadlyImportError {
         enum {
             ENTITY_NOT_SPECIFIED = 0xffffffffffffffffLL,
-            ENTITY_NOT_SPECIFIED_32 = -1u
+            ENTITY_NOT_SPECIFIED_32 = 0x00000000ffffffff
         };
 
         TypeError (const std::string& s,uint64_t entity = ENTITY_NOT_SPECIFIED, uint64_t line = SyntaxError::LINE_NOT_SPECIFIED);
